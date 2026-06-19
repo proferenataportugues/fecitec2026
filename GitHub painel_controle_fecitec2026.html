@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle FECITEC 2026 — Semáforo do Conforto</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;0,900;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f3f0;
+  --surface:#ffffff;
+  --border:#e0d4cc;
+  --text:#1e1218;
+  --muted:#8a7070;
+  --green:#6b1a2a;
+  --green-light:#f5e8eb;
+  --green-mid:#9b2d3f;
+  --amber:#8a6c00;
+  --amber-light:#fdf3d0;
+  --red:#4a1020;
+  --red-light:#f5e0e4;
+  --ink:#1e1218;
+  --accent:#6b1a2a;
+  --gold:#b8960c;
+  --gold-light:#fdf3d0;
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:0;
+}
+
+/* ── TOPO ─────────────────────────────────────────── */
+.topo{
+  background:var(--green);
+  color:#fff;
+  padding:28px 32px 24px;
+  position:relative;
+  overflow:hidden;
+}
+.topo::after{
+  content:'';
+  position:absolute;
+  right:-60px;top:-60px;
+  width:300px;height:300px;
+  border-radius:50%;
+  background:rgba(255,255,255,.04);
+  pointer-events:none;
+}
+.topo-inner{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1}
+.topo h1{font-family:'Fraunces',serif;font-size:22px;font-weight:900;letter-spacing:-.02em;line-height:1.2}
+.topo h1 span{font-style:italic;font-weight:300;font-size:18px;display:block;opacity:.8;margin-top:2px}
+.topo-meta{font-size:11px;font-family:'DM Mono',monospace;opacity:.7;margin-top:6px;line-height:1.8}
+
+/* ── PROGRESSO GERAL ──────────────────────────────── */
+.progresso-wrap{background:var(--green);padding:0 32px 24px;position:relative;z-index:1}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;font-family:'DM Mono',monospace;color:rgba(255,255,255,.7);margin-bottom:6px}
+.prog-bar-bg{height:6px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden}
+.prog-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.prog-counts{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
+.prog-count{font-size:10px;font-family:'DM Mono',monospace;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:5px}
+.prog-count span{font-size:16px;font-weight:700;color:#fff;font-family:'Fraunces',serif}
+
+/* ── LAYOUT PRINCIPAL ─────────────────────────────── */
+.main{padding:24px 32px 48px;max-width:1100px;margin:0 auto}
+
+/* ── SEÇÃO ────────────────────────────────────────── */
+.secao{margin-bottom:28px}
+.secao-titulo{
+  font-family:'Fraunces',serif;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.secao-titulo::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── GRUPOS GRID ──────────────────────────────────── */
+.grupos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+
+/* ── CARD DE GRUPO ────────────────────────────────── */
+.grupo-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+.grupo-header{
+  padding:12px 16px 10px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.grupo-num{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;
+  font-family:'DM Mono',monospace;
+}
+.grupo-info{flex:1}
+.grupo-nome{font-size:13px;font-weight:600;line-height:1.3}
+.grupo-tema{font-size:10px;color:var(--muted);margin-top:1px}
+.grupo-prog{
+  font-size:10px;font-family:'DM Mono',monospace;
+  color:var(--muted);white-space:nowrap;
+}
+.grupo-mini-bar{height:3px;background:var(--border);margin:0;border-radius:0}
+.grupo-mini-fill{height:100%;border-radius:0;transition:width .4s ease}
+
+.grupo-body{padding:10px 16px 14px}
+.tarefa-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:6px 0;
+  border-bottom:1px dashed var(--border);
+  cursor:pointer;
+}
+.tarefa-item:last-child{border-bottom:none}
+.tarefa-item:hover{background:var(--bg);margin:0 -16px;padding-left:16px;padding-right:16px;border-radius:6px}
+
+.cb{
+  width:16px;height:16px;border-radius:4px;
+  border:1.5px solid var(--border);
+  flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+  background:#fff;
+}
+.cb.done{background:var(--green);border-color:var(--green)}
+.cb.done::after{content:'✓';font-size:10px;color:#fff;font-weight:700}
+
+.tarefa-info{flex:1}
+.tarefa-papel{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tarefa-nome-aluno{font-size:12px;font-weight:500;color:var(--text)}
+.tarefa-desc{font-size:11px;color:var(--muted);line-height:1.4;margin-top:1px}
+.tarefa-item.concluida .tarefa-nome-aluno{text-decoration:line-through;color:var(--muted)}
+.tarefa-item.concluida .tarefa-desc{opacity:.5}
+
+/* ── CORES DOS GRUPOS ─────────────────────────────── */
+.g1n{background:var(--green-light);color:var(--green)}
+.g1b{background:var(--green-mid)}
+.g2n{background:#fdf3d0;color:#8a6c00}
+.g2b{background:#b8960c}
+.g3n{background:#f5e8eb;color:#6b1a2a}
+.g3b{background:#9b2d3f}
+.g4n{background:#f9f0e0;color:#7a5800}
+.g4b{background:#c8960a}
+.g5n{background:#f0e8ec;color:#4a1020}
+.g5b{background:#6b1a2a}
+
+/* ── BLOCOS LATERAIS (protótipo + docs) ───────────── */
+.dois-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.dois-col{grid-template-columns:1fr}}
+
+.bloco-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.bloco-header{padding:12px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.bloco-header-icon{font-size:16px}
+.bloco-header-txt{font-size:13px;font-weight:600}
+.bloco-body{padding:10px 16px 14px}
+
+.etapa-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:7px 0;border-bottom:1px dashed var(--border);
+  cursor:pointer;
+}
+.etapa-item:last-child{border-bottom:none}
+.etapa-item:hover{background:var(--bg);margin:0 -16px;padding-left:16px;padding-right:16px;border-radius:6px}
+.etapa-txt{font-size:12px;line-height:1.4;flex:1}
+.etapa-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.etapa-item.concluida .etapa-txt{text-decoration:line-through;color:var(--muted)}
+
+
+
+/* ── BOTÃO RESET ──────────────────────────────────── */
+.btn-reset{
+  font-size:11px;font-family:'DM Mono',monospace;
+  background:transparent;border:1px solid var(--border);
+  color:var(--muted);padding:6px 12px;border-radius:6px;
+  cursor:pointer;transition:all .15s;
+}
+.btn-reset:hover{border-color:var(--red);color:var(--red)}
+
+.topo-actions{display:flex;gap:8px;align-items:center}
+.ultima-att{font-size:10px;font-family:'DM Mono',monospace;color:rgba(255,255,255,.5)}
+
+/* ── FECITEC DESTAQUE ─────────────────────────────── */
+.fecitec-card{
+  background:var(--green);color:#fff;
+  border-radius:12px;padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+  margin-bottom:28px;
+  border-bottom:3px solid var(--gold);
+}
+.fecitec-data{font-family:'Fraunces',serif;font-size:28px;font-weight:900;letter-spacing:-.02em}
+.fecitec-label{font-size:11px;opacity:.7;font-family:'DM Mono',monospace;margin-top:2px}
+.fecitec-countdown{text-align:right}
+.fecitec-dias{font-family:'Fraunces',serif;font-size:36px;font-weight:900;line-height:1}
+.fecitec-dias-label{font-size:10px;opacity:.6;font-family:'DM Mono',monospace}
+
+@media(max-width:600px){
+  .main{padding:16px 16px 40px}
+  .topo{padding:20px 16px 16px}
+  .progresso-wrap{padding:0 16px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <div class="topo-inner">
+    <div>
+      <h1>Semáforo do Conforto<span>Painel de Controle — FECITEC 2026</span></h1>
+      <div class="topo-meta">EEB Profª Claurinice Vieira Caldeira · 2º Ano 1 · Orientadora: Renata Siqueira</div>
+    </div>
+    <div class="topo-actions">
+      <span class="ultima-att" id="ultima-att"></span>
+      <button class="btn-reset" onclick="confirmarReset()">↺ Resetar</button>
+    </div>
+  </div>
+</div>
+
+<div class="progresso-wrap">
+  <div class="prog-label">
+    <span>Progresso geral do projeto</span>
+    <span id="prog-pct">0%</span>
+  </div>
+  <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-bar" style="width:0%"></div></div>
+  <div class="prog-counts">
+    <div class="prog-count"><span id="cnt-done">0</span> concluídas</div>
+    <div class="prog-count"><span id="cnt-total">0</span> tarefas total</div>
+    <div class="prog-count"><span id="cnt-pend">0</span> pendentes</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- COUNTDOWN -->
+  <div class="fecitec-card" id="countdown-card">
+    <div>
+      <div class="fecitec-data">28 ago 2026</div>
+      <div class="fecitec-label">FECITEC 2026 · EEM Bailarina Liselott Trinks</div>
+    </div>
+    <div class="fecitec-countdown">
+      <div class="fecitec-dias" id="dias-restantes">–</div>
+      <div class="fecitec-dias-label">dias restantes</div>
+    </div>
+  </div>
+
+  <!-- GRUPOS -->
+  <div class="secao">
+    <div class="secao-titulo">Grupos & Entregas dos Alunos</div>
+    <div class="grupos-grid" id="grupos-container"></div>
+  </div>
+
+  <!-- PROTÓTIPO + DOCUMENTAÇÃO -->
+  <div class="secao">
+    <div class="secao-titulo">Protótipo & Documentação Final</div>
+    <div class="dois-col">
+      <div class="bloco-card">
+        <div class="bloco-header">
+          <span class="bloco-header-icon">🔬</span>
+          <span class="bloco-header-txt">Etapas do Protótipo</span>
+        </div>
+        <div class="bloco-body" id="prototipo-body"></div>
+      </div>
+      <div class="bloco-card">
+        <div class="bloco-header">
+          <span class="bloco-header-icon">📄</span>
+          <span class="bloco-header-txt">Documentação Final</span>
+        </div>
+        <div class="bloco-body" id="docs-body"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DADOS
+// ═══════════════════════════════════════════════════════════
+
+const GRUPOS = [
+  {
+    id:'g1', num:'G1', nome:'Neurociência, TEA & Inclusão',
+    cor:'g1n', barra:'g1b', corHex:'#6b1a2a',
+    tarefas:[
+      {id:'g1_sarah',    papel:'Pesquisadora 1',       aluno:'Sarah',      desc:'TEA e hipersensibilidade auditiva'},
+      {id:'g1_thaynara', papel:'Pesquisadora 2',       aluno:'Thaynara',   desc:'TDAH e excesso de estímulos'},
+      {id:'g1_joao',     papel:'Dados & Estatísticas', aluno:'João',       desc:'Prevalência TEA/TDAH no Brasil'},
+      {id:'g1_nicole',   papel:'Tecnologia Assistiva', aluno:'Nicole',     desc:'Exemplos nacionais e internacionais'},
+      {id:'g1_davi',     papel:'Consolidação → G5',    aluno:'Davi',       desc:'Organizar e encaminhar à Júlia Corrêa'},
+    ]
+  },
+  {
+    id:'g2', num:'G2', nome:'Qualidade do Ar & Saúde',
+    cor:'g2n', barra:'g2b', corHex:'#b8960c',
+    tarefas:[
+      {id:'g2_julia',    papel:'Pesquisadora 1',   aluno:'Júlia Damázio', desc:'Poluentes em ambientes fechados'},
+      {id:'g2_mariani',  papel:'Pesquisadora 2',   aluno:'Mariani',       desc:'Efeitos do CO₂ na aprendizagem'},
+      {id:'g2_kemylli',  papel:'Normas Técnicas',  aluno:'Kemylli',       desc:'OMS, ANVISA e CONAMA'},
+      {id:'g2_jhonny',   papel:'Sensor MQ-135',    aluno:'Jhonny ★',     desc:'Como funciona o sensor (adaptado)'},
+      {id:'g2_leilane',  papel:'Protótipo/Sensor', aluno:'Leilane',       desc:'Calibração e testes do MQ-135'},
+      {id:'g2_consol',   papel:'Consolidação → G5',aluno:'___________',   desc:'Organizar e encaminhar à Júlia Corrêa'},
+    ]
+  },
+  {
+    id:'g3', num:'G3', nome:'Poluição Sonora & Bem-Estar',
+    cor:'g3n', barra:'g3b', corHex:'#9b2d3f',
+    tarefas:[
+      {id:'g3_kely',     papel:'Pesquisadora 1',   aluno:'Kely',    desc:'O que é poluição sonora e como é medida'},
+      {id:'g3_luiza',    papel:'Pesquisadora 2',   aluno:'Luiza',   desc:'Efeitos do ruído na saúde'},
+      {id:'g3_helena',   papel:'Normas Técnicas',  aluno:'Helena',  desc:'ABNT e OMS para ambientes educacionais'},
+      {id:'g3_natalia',  papel:'Sensor MAX9814',   aluno:'Natália', desc:'Como funciona o sensor de som'},
+      {id:'g3_leticia',  papel:'Protótipo/Sensor', aluno:'Letícia', desc:'Testes do MAX9814 em sala de aula'},
+      {id:'g3_sofia',    papel:'Consolidação → G5',aluno:'Sofia',   desc:'Organizar e encaminhar à Júlia Corrêa'},
+    ]
+  },
+  {
+    id:'g4', num:'G4', nome:'Eletrônica, Arduino & IoT',
+    cor:'g4n', barra:'g4b', corHex:'#c8960a',
+    tarefas:[
+      {id:'g4_nicolas',  papel:'Pesquisador',      aluno:'Nicolas',  desc:'Arduino: história e usos educacionais'},
+      {id:'g4_joaquim',  papel:'Código-Fonte',     aluno:'Joaquim ★',desc:'Documentar e comentar o código (adaptado)'},
+      {id:'g4_victor',   papel:'Esquema Elétrico', aluno:'Victor',   desc:'Reproduzir e explicar o circuito'},
+      {id:'g4_allan',    papel:'Montagem',         aluno:'Allan',    desc:'Construção física do protótipo'},
+      {id:'g4_habner',   papel:'Testes + Consol.', aluno:'Habner',   desc:'Testes integrados e encaminhar ao G5'},
+    ]
+  },
+  {
+    id:'g5', num:'G5', nome:'Comunicação Científica & Docs',
+    cor:'g5n', barra:'g5b', corHex:'#0d6b62',
+    tarefas:[
+      {id:'g5_pesq',     papel:'Pesquisador(a)',   aluno:'___________', desc:'Estrutura do relatório científico'},
+      {id:'g5_abnt',     papel:'ABNT',             aluno:'___________', desc:'Normas de citação e formatação'},
+      {id:'g5_julia',    papel:'Redação + Consol.',aluno:'Júlia Corrêa',desc:'Relatório final + slides para a banca'},
+      {id:'g5_foto',     papel:'Registro Visual',  aluno:'___________', desc:'Fotografar etapas do projeto'},
+      {id:'g5_banner',   papel:'Banner',           aluno:'___________', desc:'Revisão e envio para impressão A0'},
+    ]
+  },
+];
+
+const PROTOTIPO = [
+  {id:'pt_componentes', txt:'Separar e conferir todos os componentes',          sub:'Arduino, sensores, LEDs, LCD, protoboard'},
+  {id:'pt_protoboard',  txt:'Montagem na protoboard (G4 — Allan)',               sub:'Seguindo esquema do Victor'},
+  {id:'pt_codigo',      txt:'Upload e teste inicial do código',                  sub:'G4 — Joaquim + orientadora'},
+  {id:'pt_sensor_mq',   txt:'Calibração do sensor MQ-135',                      sub:'G2 — Leilane'},
+  {id:'pt_sensor_max',  txt:'Calibração do sensor MAX9814',                      sub:'G3 — Letícia'},
+  {id:'pt_integracao',  txt:'Testes integrados — todos os sensores juntos',      sub:'G4 — Habner'},
+  {id:'pt_limiares',    txt:'Ajuste final dos limiares (51 dB / 66 dB)',         sub:'G4 — Habner + orientadora'},
+  {id:'pt_caixa',       txt:'Montagem na caixa física (MDF/acrílico)',           sub:'G4 — Allan'},
+  {id:'pt_ok',          txt:'Protótipo aprovado para apresentação',              sub:'Validação final com a orientadora'},
+];
+
+const DOCS = [
+  {id:'dc_pesquisas',  txt:'Receber pesquisas consolidadas de G1–G4',           sub:'Júlia Corrêa — G5'},
+  {id:'dc_relatorio',  txt:'Redigir relatório científico completo (ABNT)',       sub:'G5 — Júlia Corrêa'},
+  {id:'dc_banner',     txt:'Revisar e enviar banner para impressão A0',          sub:'G5 — responsável banner'},
+  {id:'dc_slides',     txt:'Montar slides para a banca',                        sub:'G5 — Júlia Corrêa'},
+  {id:'dc_ensaio',     txt:'Ensaio geral da apresentação oral',                 sub:'Toda a turma — sem. 9'},
+  {id:'dc_entrega',    txt:'Entrega final de todos os documentos',              sub:'Prazo: 27/ago/2026'},
+];
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+// FIREBASE — substitua a URL abaixo pela sua
+// ═══════════════════════════════════════════════════════════
+
+const FIREBASE_URL = 'https://fecitec-2026-default-rtdb.firebaseio.com';
+const DB_PATH = '/estado.json';
+
+let STATE = {};
+let _saving = false;
+
+// Carrega estado inicial e abre escuta em tempo real (SSE do Firebase)
+async function initFirebase() {
+  setStatus('conectando...');
+  try {
+    // Carrega estado atual
+    const res = await fetch(FIREBASE_URL + DB_PATH);
+    const data = await res.json();
+    STATE = data && typeof data === 'object' ? data : {};
+    render();
+    setStatus('sincronizado');
+
+    // Escuta mudanças em tempo real via EventSource (Firebase SSE)
+    const source = new EventSource(FIREBASE_URL + DB_PATH + '?accept=text/event-stream');
+    source.addEventListener('put', e => {
+      const msg = JSON.parse(e.data);
+      if (msg.data && typeof msg.data === 'object') {
+        STATE = msg.data;
+      } else if (msg.data === null) {
+        STATE = {};
+      }
+      render();
+      setStatus('sincronizado');
+    });
+    source.onerror = () => setStatus('reconectando...');
+  } catch(err) {
+    setStatus('erro de conexão');
+    console.error('Firebase init error:', err);
+  }
+}
+
+async function saveState(state) {
+  if (_saving) return;
+  _saving = true;
+  setStatus('salvando...');
+  try {
+    await fetch(FIREBASE_URL + DB_PATH, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    setStatus('sincronizado');
+    atualizarTimestamp();
+  } catch(err) {
+    setStatus('erro ao salvar');
+    console.error('Firebase save error:', err);
+  }
+  _saving = false;
+}
+
+function setStatus(msg) {
+  const el = document.getElementById('ultima-att');
+  if (el) el.textContent = msg;
+}
+
+function toggle(id) {
+  STATE[id] = !STATE[id];
+  render();
+  saveState({ ...STATE });
+}
+
+function confirmarReset() {
+  if(confirm('Resetar todo o progresso? Esta ação não pode ser desfeita.')) {
+    STATE = {};
+    saveState({});
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════════════════
+
+function calcDias() {
+  const hoje = new Date();
+  const feira = new Date('2026-08-28');
+  const diff = Math.ceil((feira - hoje) / (1000*60*60*24));
+  return diff > 0 ? diff : 0;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+
+function render() {
+  renderGrupos();
+  renderBloco('prototipo-body', PROTOTIPO);
+  renderBloco('docs-body', DOCS);
+  updateProgresso();
+}
+
+function renderGrupos() {
+  const container = document.getElementById('grupos-container');
+  container.innerHTML = '';
+  GRUPOS.forEach(g => {
+    const done = g.tarefas.filter(t => STATE[t.id]).length;
+    const total = g.tarefas.length;
+    const pct = Math.round(done/total*100);
+
+    const card = document.createElement('div');
+    card.className = 'grupo-card';
+    card.innerHTML = `
+      <div class="grupo-header">
+        <div class="grupo-num ${g.cor}">${g.num}</div>
+        <div class="grupo-info">
+          <div class="grupo-nome">${g.nome}</div>
+          <div class="grupo-tema">${done}/${total} tarefas concluídas</div>
+        </div>
+        <div class="grupo-prog">${pct}%</div>
+      </div>
+      <div class="grupo-mini-bar"><div class="grupo-mini-fill ${g.barra}" style="width:${pct}%"></div></div>
+      <div class="grupo-body">
+        ${g.tarefas.map(t => `
+          <div class="tarefa-item ${STATE[t.id]?'concluida':''}" onclick="toggle('${t.id}')">
+            <div class="cb ${STATE[t.id]?'done':''}"></div>
+            <div class="tarefa-info">
+              <div class="tarefa-papel">${t.papel}</div>
+              <div class="tarefa-nome-aluno">${t.aluno}</div>
+              <div class="tarefa-desc">${t.desc}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderBloco(containerId, itens) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = itens.map(it => `
+    <div class="etapa-item ${STATE[it.id]?'concluida':''}" onclick="toggle('${it.id}')">
+      <div class="cb ${STATE[it.id]?'done':''}"></div>
+      <div>
+        <div class="etapa-txt">${it.txt}</div>
+        <div class="etapa-sub">${it.sub}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+
+function updateProgresso() {
+  // Conta tarefas de alunos + protótipo + docs (não conta cronograma)
+  const allIds = [
+    ...GRUPOS.flatMap(g=>g.tarefas.map(t=>t.id)),
+    ...PROTOTIPO.map(p=>p.id),
+    ...DOCS.map(d=>d.id),
+  ];
+  const total = allIds.length;
+  const done = allIds.filter(id=>STATE[id]).length;
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+
+  document.getElementById('prog-bar').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent = pct+'%';
+  document.getElementById('cnt-done').textContent = done;
+  document.getElementById('cnt-total').textContent = total;
+  document.getElementById('cnt-pend').textContent = total-done;
+}
+
+function atualizarTimestamp() {
+  const el = document.getElementById('ultima-att');
+  if(el) {
+    const now = new Date();
+    el.textContent = 'salvo ' + now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById('dias-restantes').textContent = calcDias();
+render(); // render inicial com STATE vazio enquanto carrega
+initFirebase();
+</script>
+</body>
+</html>
