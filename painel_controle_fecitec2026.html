@@ -217,6 +217,14 @@ body{
       <h1>Semáforo do Conforto<span>Painel de Controle — FECITEC 2026</span></h1>
       <div class="topo-meta">EEB Profª Claurinice Vieira Caldeira · 2º Ano 1 · Orientadora: Renata Siqueira</div>
     </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;opacity:.9;text-align:center">
+        <span style="opacity:.7">03 jul 2026</span> <span style="opacity:.5;margin:0 6px">·</span> <span style="font-weight:600">Feira do Conhecimento — CVC</span>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;opacity:.9;text-align:center">
+        <span style="opacity:.7">28 ago 2026</span> <span style="opacity:.5;margin:0 6px">·</span> <span style="font-weight:600">FECITEC 2026</span>
+      </div>
+    </div>
     <div class="topo-actions">
       <span class="ultima-att" id="ultima-att"></span>
       <button class="btn-reset" onclick="confirmarReset()">↺ Resetar</button>
@@ -240,14 +248,26 @@ body{
 <div class="main">
 
   <!-- COUNTDOWN -->
-  <div class="fecitec-card" id="countdown-card">
-    <div>
-      <div class="fecitec-data">28 ago 2026</div>
-      <div class="fecitec-label">FECITEC 2026 · EEM Bailarina Liselott Trinks</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px">
+    <div class="fecitec-card" style="margin-bottom:0">
+      <div>
+        <div class="fecitec-data">03 jul 2026</div>
+        <div class="fecitec-label">Feira do Conhecimento — CVC</div>
+      </div>
+      <div class="fecitec-countdown">
+        <div class="fecitec-dias" id="dias-cvc">–</div>
+        <div class="fecitec-dias-label">dias restantes</div>
+      </div>
     </div>
-    <div class="fecitec-countdown">
-      <div class="fecitec-dias" id="dias-restantes">–</div>
-      <div class="fecitec-dias-label">dias restantes</div>
+    <div class="fecitec-card" style="margin-bottom:0">
+      <div>
+        <div class="fecitec-data">28 ago 2026</div>
+        <div class="fecitec-label">FECITEC 2026</div>
+      </div>
+      <div class="fecitec-countdown">
+        <div class="fecitec-dias" id="dias-restantes">–</div>
+        <div class="fecitec-dias-label">dias restantes</div>
+      </div>
     </div>
   </div>
 
@@ -459,6 +479,13 @@ function calcDias() {
   return diff > 0 ? diff : 0;
 }
 
+function calcDiasCVC() {
+  const hoje = new Date();
+  const cvc = new Date('2026-07-03');
+  const diff = Math.ceil((cvc - hoje) / (1000*60*60*24));
+  return diff > 0 ? diff : 0;
+}
+
 // ═══════════════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════════════
@@ -552,6 +579,7 @@ function atualizarTimestamp() {
 // ═══════════════════════════════════════════════════════════
 
 document.getElementById('dias-restantes').textContent = calcDias();
+document.getElementById('dias-cvc').textContent = calcDiasCVC();
 render(); // render inicial com STATE vazio enquanto carrega
 initFirebase();
 </script>
